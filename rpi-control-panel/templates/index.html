@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Contrôle des TV</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Optional: Bootstrap JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body>
+  <div class="container my-4">
+    <h2 class="text-center mb-4">Interface de contrôle des TV</h2>
+
+    <!-- Bouton Rafraîchir -->
+    <div class="text-center mb-3">
+      <button type="button" class="btn btn-secondary" onclick="updateTVStatus()">Rafraîchir l'état des TV</button>
+    </div>
+
+    <!-- Tableau des TV -->
+    <h3>TV (config)</h3>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
+      {% for tv in tvs %}
+      <div class="col">
+        <div class="card tv-card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">{{ tv.name }}</h5>
+            <p class="card-text mb-1"><strong>IP :</strong> {{ tv.ip }} - <strong>Port :</strong> {{ tv.port }}</p>
+
+            <form method="POST" action="{{ url_for('send_url', index=loop.index0) }}" class="d-flex mb-2">
+              <input type="text" class="form-control me-2 form-control-sm" name="url" value="{{ tv.url }}">
+              <button type="submit" class="btn btn-primary btn-sm">Envoyer</button>
+            </form>
+
+            <p class="mb-1"><strong>État :</strong>
+              <span class="
+                {% if 'Erreur' in tv.status %}text-warning fw-bold
+                {% elif tv.status == 'en ligne' %}text-success fw-bold
+                {% else %}text-danger fw-bold{% endif %} tv-status">{{ tv.status }}</span>
+            </p>
+            <p class="mb-0"><strong>Dernière URL :</strong> <span class="tv-last-url">{{ tv.last_url }}</span></p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Tableau affichages prédéfinis -->
+    <h3>Affichages prédéfinis</h3>
+    <table class="table table-bordered table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Nom affichage</th>
+          <th>URL</th>
+          <th>Envoyer à</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for disp_index in range(displays|length) %}
+        <tr>
+          <td>{{ displays[disp_index].name }}</td>
+          <td style="max-width:400px; overflow-wrap:anywhere;">{{ displays[disp_index].url }}</td>
+          <td class="d-flex flex-wrap gap-1">
+            {% for tv_index in range(tvs|length) %}
+            <form method="POST" action="/send_display/{{ disp_index }}/to/{{ tv_index }}">
+              <button type="submit" class="btn btn-outline-secondary btn-sm">{{ tvs[tv_index]["name"] }}</button>
+            </form>
+            {% endfor %}
+            <form method="POST" action="/send_display/{{ disp_index }}/to_all">
+              <button type="submit" class="btn btn-success btn-sm">TOUTES</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Envoyer URL manuelle -->
+    <h3>Envoyer une URL manuellement</h3>
+    <form method="POST" action="{{ url_for('send_all') }}" class="d-flex justify-content-center mb-4">
+      <input type="text" class="form-control me-2" name="url" style="max-width:60%;" placeholder="https://...">
+      <button type="submit" class="btn btn-warning">Envoyer à toutes les TV</button>
+    </form>
+
+    <p class="text-center text-muted">Mot de passe RPi utilisé : <strong>{{ password }}</strong></p>
+  </div>
+  <script>
+    function updateTVStatus() {
+      fetch("/tv_status")
+        .then(response => response.json())
+        .then(data => {
+          data.forEach((tv, index) => {
+            // Mettre à jour la colonne "État"
+            const statusCell = document.querySelectorAll(".tv-card")[index].querySelector(".tv-status");
+            statusCell.textContent = tv.status;
+            statusCell.className = "tv-status"; // réinitialiser
+
+            if (tv.status.includes("Erreur")) {
+              statusCell.classList.add("text-warning", "fw-bold");
+            } else if (tv.status === "en ligne") {
+              statusCell.classList.add("text-success", "fw-bold");
+            } else {
+              statusCell.classList.add("text-danger", "fw-bold");
+            }
+
+            // Mettre à jour la dernière URL
+            const lastUrlCell = document.querySelectorAll(".tv-card")[index].querySelector(".tv-last-url");
+            lastUrlCell.textContent = tv.last_url;
+          });
+        })
+        .catch(err => console.error("Erreur récupération statut TV:", err));
+    }
+
+    // Rafraîchir toutes les 120 secondes
+    setInterval(updateTVStatus, 120 * 1000);
+
+    // Optionnel : rafraîchir immédiatement au chargement
+    updateTVStatus();
+  </script>
+</body>
+
+</html>
