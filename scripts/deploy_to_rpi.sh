@@ -95,9 +95,9 @@ if [ -n "$PASSWORD" ]; then
 fi
 
 if [ -n "$PORT" ]; then
-  echo "Updating PORT/INTERFACE_PORT on remote"
-  # Use sed on remote to replace the INTERFACE_PORT line (creates a .bak backup)
-  ssh $USER_HOST "sed -i.bak 's/^INTERFACE_PORT = .*/INTERFACE_PORT = $PORT/' \"$ABS_REMOTE_DIR/server.py\" || true"
+  echo "Updating PORT on remote"
+  # Use sed on remote to replace the PORT line (creates a .bak backup)
+  ssh $USER_HOST "sed -i.bak 's/^PORT = .*/PORT = $PORT/' \"$ABS_REMOTE_DIR/server.py\" || true"
 fi
 
 # service deployment removed; use --autostart for session autostart instead
