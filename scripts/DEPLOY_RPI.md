@@ -1,79 +1,93 @@
-# Déploiement simple vers un Raspberry Pi (sans Ansible)
+# Déploiement des écrans Raspberry Pi
 
-Ce document décrit l'utilisation de `scripts/deploy_to_rpi.sh` : copie miroir du composant choisi (screen-controller ou rpi-control-panel) sur un RPi via rsync/ssh, crée un virtualenv, installe les dépendances et (optionnel) installe un service systemd.
+Ce document décrit l'utilisation de `scripts/deploy_to_rpi.sh` pour installer le contrôleur d'écran (`screen-controller`) sur les Raspberry Pi. Le script copie les fichiers, configure un environnement virtuel Python et paramètre le démarrage automatique du contrôleur.
 
-Prérequis
+## Prérequis sur le Raspberry Pi
 
-- Accès SSH au Raspberry Pi (ex : pi@192.168.1.21).
-- `rsync` et `ssh` installés sur la machine source.
-- Python3 disponible sur la cible.
+- Raspbian/Raspberry Pi OS installé
+- Python3 et chromium installés
+- SSH activé et clés configurées pour l'utilisateur pi
+- IP fixe configurée (optionel)
+- Session graphique (bureau) active pour l'utilisateur pi
 
-Exemples
+## Exemples d'utilisation
 
-- Déployer le contrôleur d'écran sur `pi@192.168.1.21`, installer venv et paquets :
-
+Déployer avec les paramètres par défaut :
 ```bash
-./scripts/deploy_to_rpi.sh pi@192.168.1.21 screen-controller
+./scripts/deploy_to_rpi.sh pi@192.168.1.100
 ```
 
-- Déployer et remplacer le mot de passe RPi (important : mettez le même mot de passe dans le panneau central) :
-
+Déployer avec port et mot de passe spécifiques :
 ```bash
-./scripts/deploy_to_rpi.sh pi@192.168.1.21 screen-controller --password "votre_mot_de_passe"
+./scripts/deploy_to_rpi.sh pi@192.168.1.100 --port 8080 --password "votre_mot_de_passe"
 ```
 
-- Déployer l'interface centrale (control-panel) et exposer sur un port différent :
-
+Activer le démarrage automatique :
 ```bash
-./scripts/deploy_to_rpi.sh pi@192.168.1.21 rpi-control-panel --port 5000
+./scripts/deploy_to_rpi.sh pi@192.168.1.100 --autostart
 ```
 
-- Déployer et installer un service systemd qui lancera le script au démarrage :
-
+Désactiver l'autostart :
 ```bash
-./scripts/deploy_to_rpi.sh pi@192.168.1.21 screen-controller --service
+./scripts/deploy_to_rpi.sh pi@192.168.1.100 --no-autostart
 ```
 
-Notes de sécurité et d'usage
+## Vérification du déploiement
 
-- Le remplacement du `PASSWORD` remplace la ligne commençant par `PASSWORD =` dans `server.py` ou `control-panel.py`. Vérifiez le fichier résultant si votre mot de passe contient des caractères spéciaux.
-- Le service systemd créé demande `sudo` sur la cible; l'utilisateur SSH doit pouvoir exécuter `sudo`.
-- Ce mécanisme est conçu pour un réseau local sécurisé. Pour une exposition publique, ajoutez TLS et authentification plus forte.
+1. Tester l'accès HTTP :
+   ```bash
+   curl http://192.168.1.100:8080/status
+   ```
 
-Dépannage rapide
+2. Vérifier que le serveur répond "Screen Controller OK" :
+   ```bash
+   curl http://192.168.1.100:8080/
+   ```
 
-- Si rsync/ssh échoue : vérifier la connectivité réseau et les permissions SSH.
-- Si l'installation des paquets échoue : connectez-vous en SSH et exécutez `source venv/bin/activate && pip install -r requirements.txt` pour voir l'erreur complète.
+3. Tester l'envoi d'une URL :
+   ```bash
+   curl -X POST -d "url=https://example.com&password=votre_mot_de_passe" http://192.168.1.100:8080/set-url
+   ```
 
-Affichage et Chromium (Xvfb)
+## Structure du déploiement
 
-Le composant lance Chromium en mode kiosk. Si le service systemd s'exécute sans session graphique (pas de $DISPLAY), Chromium échoue avec "Missing X server or $DISPLAY".
+- Le code est copié dans `~/screen-controller/`
+- Un virtualenv Python est créé dans `~/screen-controller/venv/`
+- Si autostart activé :
+  - Fichier `.desktop` créé dans `~/.config/autostart/`
+  - Démarrage automatique dans la session de l'utilisateur pi
 
-Pour éviter ce problème, l'option `--service` du script installe automatiquement `Xvfb` (si possible via apt) et génère une unité systemd qui utilise `xvfb-run` pour fournir un $DISPLAY virtuel au processus. En pratique :
+## Notes importantes
 
-- Lancer le déploiement avec installation du service (Xvfb est installé automatiquement si accessible) :
+- Le script utilise SSH/rsync pour le déploiement. Assurez-vous d'avoir un accès SSH configuré.
+- Le remplacement du `PASSWORD` modifie la ligne commençant par `PASSWORD =` dans `server.py`.
+- L'autostart est configuré au niveau utilisateur (pas systemd).
+- L'écran doit être en mode desktop (pas console).
+- Chromium est lancé en mode kiosk.
+- L'utilisateur pi doit être connecté au bureau pour que l'affichage fonctionne.
 
-```bash
-./scripts/deploy_to_rpi.sh pi@192.168.1.21 screen-controller --service
-```
+## Dépannage
 
-- Vérifications utiles après déploiement :
+1. Si l'écran reste noir :
+   - Vérifiez que l'utilisateur pi est connecté au bureau
+   - Vérifiez les logs dans `~/screen-controller/error.log`
 
-```bash
-# afficher le statut et logs du service
-sudo systemctl status screen-controller.service
-sudo journalctl -u screen-controller.service -n 200 --no-pager
+2. Si le serveur ne répond pas :
+   - Vérifiez que le processus tourne : `ps aux | grep server.py`
+   - Vérifiez les logs : `tail -f ~/screen-controller/error.log`
+   - Testez manuellement :
+     ```bash
+     cd ~/screen-controller
+     source venv/bin/activate
+     python3 server.py
+     ```
 
-# vérifier que xvfb-run est installé sur la cible
-ssh pi@192.168.1.21 which xvfb-run Xvfb || true
+3. Si chromium ne démarre pas :
+   - Vérifiez que DISPLAY est défini : `echo $DISPLAY`
+   - Testez chromium manuellement : `chromium --kiosk https://example.com`
 
-# tester manuellement (sur le RPi, dans le répertoire déployé)
-xvfb-run -a python3 server.py
-# puis appeler /set-url depuis une autre machine pour vérifier le lancement de Chromium
-```
+## Support et ajustements
 
-Notes spécifiques :
-
-- L'installation de `xvfb` nécessite un accès apt (internet) sur la cible. Si la machine est air-gapped, installez `xvfb` manuellement.
-- Si vous préférez utiliser la session graphique réelle (DISPLAY :0), modifiez manuellement l'unité systemd pour exporter `DISPLAY` et `XAUTHORITY` — cela nécessite qu'un utilisateur graphique soit connecté.
-- Si vous souhaitez contrôler la résolution de l'écran virtuel, je peux ajouter des options au script (ex : `--xvfb-res 1920x1080x24`).
+- Pour les problèmes d'affichage : vérifiez la configuration du bureau et l'auto-login.
+- Pour les problèmes réseau : vérifiez le pare-feu et la configuration réseau.
+- Les logs sont dans `~/screen-controller/error.log`.
