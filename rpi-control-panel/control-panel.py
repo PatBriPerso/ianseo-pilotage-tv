@@ -21,6 +21,11 @@ DISPLAYS = [
 
 PASSWORD = "changeme"  # doit correspondre aux RPi
 INTERFACE_PORT = 5000  # port pour l'interface centrale
+
+# Timeout pour les requêtes HTTP (en secondes)
+# - Utilisé pour les requêtes GET /status (vérification état TV)
+# - Utilisé pour les requêtes POST /set-url (envoi d'URL aux TV)
+TIMEOUT = 5
 # --------------------------------------------
 
 app = Flask(__name__)
