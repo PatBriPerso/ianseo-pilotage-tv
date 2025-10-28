@@ -11,7 +11,6 @@ if [ "$#" -lt 1 ]; then
 fi
 
 USER_HOST="$1"
-COMPONENT="screen-controller"
 REMOTE_DIR=""
 PASSWORD=""
 PORT=""
@@ -37,7 +36,6 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 LOCAL_DIR="$REPO_ROOT/screen-controller"
 DEFAULT_REMOTE_DIR="~/screen-controller"
-SERVICE_NAME="screen-controller.service"
 
 REMOTE_DIR="${REMOTE_DIR:-$DEFAULT_REMOTE_DIR}"
 
@@ -45,7 +43,7 @@ REMOTE_DIR="${REMOTE_DIR:-$DEFAULT_REMOTE_DIR}"
 echo "Resolving remote absolute path for $REMOTE_DIR on $USER_HOST..."
 ABS_REMOTE_DIR=$(ssh "$USER_HOST" "bash -lc 'mkdir -p $REMOTE_DIR && cd $REMOTE_DIR && pwd'") || { echo "Failed to resolve remote directory on $USER_HOST"; exit 1; }
 
-echo "Deploying $COMPONENT -> $USER_HOST:$ABS_REMOTE_DIR"
+echo "Deploying screen-controller -> $USER_HOST:$ABS_REMOTE_DIR"
 
 # Copy files to the resolved absolute path on the remote
 rsync -avz --delete --exclude __pycache__/ "$LOCAL_DIR/" "$USER_HOST:$ABS_REMOTE_DIR/"
