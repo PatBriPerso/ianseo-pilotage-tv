@@ -102,10 +102,25 @@
               <span class="
                 {% if 'Erreur' in tv.status %}text-warning fw-bold
                 {% elif tv.status == 'online' %}text-success fw-bold
-                {% else %}text-danger fw-bold{% endif %} tv-status">{{ tv.status }}</span>
+                {% else %}text-danger fw-bold{% endif %} tv-status" 
+                {% if 'Erreur' in tv.status %}title="{{ tv.status }}"{% endif %}>
+                {% if 'Erreur' in tv.status %}erreur{% else %}{{ tv.status }}{% endif %}
+              </span>
             </p>
-            <p class="mb-0 text-truncate" title="{{ tv.last_url }}">
-              <strong>Dernière URL :</strong> <span class="tv-last-url">{{ tv.last_url }}</span>
+            <p class="mb-0 text-truncate">
+              <strong>Dernière URL :</strong> 
+              <span class="tv-last-url" title="{{ tv.last_url }}">
+              {% set display_name = namespace(found=false) %}
+              {% for display in displays %}
+                {% if display.url == tv.last_url %}
+                  {% set display_name.found = true %}
+                  <span class="badge bg-primary">{{ display.name }}</span>
+                {% endif %}
+              {% endfor %}
+              {% if not display_name.found %}
+                {{ tv.last_url }}
+              {% endif %}
+              </span>
             </p>
           </div>
         </div>
@@ -185,6 +200,13 @@
     </script>
   </div>
   <script>
+    // Liste des affichages prédéfinis (à initialiser au chargement)
+    const predefinedDisplays = [
+      {% for display in displays %}
+      { name: "{{ display.name }}", url: "{{ display.url }}" }{{ "," if not loop.last }}
+      {% endfor %}
+    ];
+
     function updateTVStatus() {
       fetch("/tv_status")
         .then(response => response.json())
@@ -197,7 +219,9 @@
 
             if (tv.status.includes("Erreur")) {
               statusCell.classList.add("text-warning", "fw-bold");
-            } else if (tv.status === "en ligne") {
+              statusCell.setAttribute("title", tv.status);
+              statusCell.textContent = "erreur";
+            } else if (tv.status === "online") {
               statusCell.classList.add("text-success", "fw-bold");
             } else {
               statusCell.classList.add("text-danger", "fw-bold");
@@ -205,7 +229,15 @@
 
             // Mettre à jour la dernière URL
             const lastUrlCell = document.querySelectorAll(".tv-card")[index].querySelector(".tv-last-url");
-            lastUrlCell.textContent = tv.last_url;
+            lastUrlCell.setAttribute("title", tv.last_url);
+            
+            // Vérifier si l'URL correspond à un affichage prédéfini
+            const matchingDisplay = predefinedDisplays.find(display => display.url === tv.last_url);
+            if (matchingDisplay) {
+              lastUrlCell.innerHTML = `<span class="badge bg-primary">${matchingDisplay.name}</span>`;
+            } else {
+              lastUrlCell.textContent = tv.last_url;
+            }
           });
         })
         .catch(err => console.error("Erreur récupération statut TV:", err));
