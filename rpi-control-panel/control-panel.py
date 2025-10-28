@@ -13,9 +13,10 @@ TVS = [
 
 # Liste des affichages prédéfinis (nom + url)
 DISPLAYS = [
-    {"name": "Résultats Salle 1", "url": "https://serveur/res/salle1"},
-    {"name": "Résultats Salle 2", "url": "https://serveur/res/salle2"},
-    {"name": "Podium", "url": "https://serveur/podium"},
+    {"name": "Wikipedia", "url": "https://www.wikipedia.org"},
+    {"name": "TF1", "url": "https://www.tf1.fr"},
+    {"name": "France 2", "url": "https://www.france.tv/france-2/"},
+    {"name": "Canal+", "url": "https://www.canalplus.com/"},
 ]
 
 PASSWORD = "changeme"  # doit correspondre aux RPi
