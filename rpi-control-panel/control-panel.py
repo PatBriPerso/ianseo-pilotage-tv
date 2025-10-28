@@ -4,11 +4,11 @@ import requests
 
 # ---------------- Paramètres ----------------
 TVS = [
-    {"name": "TV Gauche [1-8]", "ip": "192.168.1.21", "port": 8080},
-    {"name": "TV Milieu [9-16]", "ip": "192.168.1.22", "port": 8080},
-    {"name": "TV Droite [17-24]", "ip": "192.168.1.23", "port": 8080},
-    {"name": "TV Entrée", "ip": "192.168.1.24", "port": 8080},
-    {"name": "TV Buvette", "ip": "192.168.1.25", "port": 8080},
+    {"name": "TV Gauche [1-8]", "ip": "adgtv01.local", "port": 7828},
+    {"name": "TV Milieu [9-16]", "ip": "adgtv02.local", "port": 7828},
+    {"name": "TV Droite [17-24]", "ip": "adgtv03.local", "port": 7828},
+    {"name": "TV Entrée", "ip": "adgtv04.local", "port": 7828},
+    {"name": "TV Buvette", "ip": "adgtv05.local", "port": 7828},
 ]
 
 # Liste des affichages prédéfinis (nom + url)
