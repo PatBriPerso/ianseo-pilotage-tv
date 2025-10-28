@@ -89,27 +89,24 @@
     </div>
 
     <!-- Tableau des TV -->
-    <h3>TV (config)</h3>
+    <h3>TV</h3>
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
       {% for tv in tvs %}
       <div class="col">
         <div class="card tv-card h-100 shadow-sm">
           <div class="card-body">
             <h5 class="card-title">{{ tv.name }}</h5>
-            <p class="card-text mb-1"><strong>IP :</strong> {{ tv.ip }} - <strong>Port :</strong> {{ tv.port }}</p>
-
-            <form method="POST" action="{{ url_for('send_url', index=loop.index0) }}" class="d-flex mb-2">
-              <input type="text" class="form-control me-2 form-control-sm" name="url" value="{{ tv.url }}">
-              <button type="submit" class="btn btn-primary btn-sm">Envoyer</button>
-            </form>
-
-            <p class="mb-1"><strong>État :</strong>
+            <p class="card-text mb-2"><strong>IP :</strong> {{ tv.ip }} - <strong>Port :</strong> {{ tv.port }}</p>
+            
+            <p class="mb-2"><strong>État :</strong>
               <span class="
                 {% if 'Erreur' in tv.status %}text-warning fw-bold
-                {% elif tv.status == 'en ligne' %}text-success fw-bold
+                {% elif tv.status == 'online' %}text-success fw-bold
                 {% else %}text-danger fw-bold{% endif %} tv-status">{{ tv.status }}</span>
             </p>
-            <p class="mb-0"><strong>Dernière URL :</strong> <span class="tv-last-url">{{ tv.last_url }}</span></p>
+            <p class="mb-0 text-truncate" title="{{ tv.last_url }}">
+              <strong>Dernière URL :</strong> <span class="tv-last-url">{{ tv.last_url }}</span>
+            </p>
           </div>
         </div>
       </div>
@@ -149,12 +146,43 @@
 
     <!-- Envoyer URL manuelle -->
     <h3>Envoyer une URL manuellement</h3>
-    <form method="POST" action="{{ url_for('send_all') }}" class="d-flex manual-url-form mb-4">
-      <input type="text" class="form-control" name="url" placeholder="https://...">
-      <button type="submit" class="btn btn-warning">Envoyer à toutes les TV</button>
-    </form>
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <input type="text" class="form-control" id="manualUrl" placeholder="https://..." 
+                   oninput="updateManualUrlForms(this.value)">
+          </div>
+          <div class="col-12">
+            <div class="d-flex flex-column gap-2">
+              <p class="mb-2"><strong>Envoyer à :</strong></p>
+              <div class="btn-group-vertical w-100 gap-1">
+                {% for tv in tvs %}
+                <form method="POST" action="{{ url_for('send_url', index=loop.index0) }}" class="w-100">
+                  <input type="hidden" name="url" class="manual-url-input">
+                  <button type="submit" class="btn btn-outline-primary w-100">{{ tv.name }}</button>
+                </form>
+                {% endfor %}
+                <form method="POST" action="{{ url_for('send_all') }}" class="w-100">
+                  <input type="hidden" name="url" class="manual-url-input">
+                  <button type="submit" class="btn btn-warning w-100 mt-2">Toutes les TV</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <p class="text-center text-muted small">Mot de passe RPi utilisé : <strong>{{ password }}</strong></p>
+    <p class="text-center text-muted small mt-3">Mot de passe RPi utilisé : <strong>{{ password }}</strong></p>
+
+    <script>
+      function updateManualUrlForms(url) {
+        document.querySelectorAll('.manual-url-input').forEach(input => {
+          input.value = url;
+        });
+      }
+    </script>
   </div>
   <script>
     function updateTVStatus() {
