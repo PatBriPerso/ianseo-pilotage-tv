@@ -100,7 +100,8 @@
             
             <p class="mb-2"><strong>État :</strong>
               <span class="
-                {% if 'Erreur' in tv.status %}text-warning fw-bold
+                {% if 'Erreur' in tv.status %}text-danger fw-bold
+                {% elif 'hors ligne' in tv.status %}text-warning fw-bold
                 {% elif tv.status == 'en ligne' %}text-success fw-bold
                 {% else %}text-danger fw-bold{% endif %} tv-status" 
                 {% if 'Erreur' in tv.status %}title="{{ tv.status }}"{% endif %}>
@@ -218,11 +219,13 @@
             statusCell.className = "tv-status"; // réinitialiser
 
             if (tv.status.includes("Erreur")) {
-              statusCell.classList.add("text-warning", "fw-bold");
+              statusCell.classList.add("text-danger", "fw-bold");
               statusCell.setAttribute("title", tv.status);
               statusCell.textContent = "erreur";
             } else if (tv.status === "en ligne") {
               statusCell.classList.add("text-success", "fw-bold");
+            } else if (tv.status.includes("hors ligne")) {
+              statusCell.classList.add("text-warning", "fw-bold");
             } else {
               statusCell.classList.add("text-danger", "fw-bold");
             }

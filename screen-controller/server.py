@@ -32,7 +32,7 @@ def get_chromium_status():
         url_match = re.search(r'--kiosk\s+(\S+)', cmd_line)
         
         if not url_match:
-            return "en ligne (URL non détectée)", None
+            return "hors ligne (URL non détectée)", None
             
         current_url = url_match.group(1)
         return "en ligne", current_url
