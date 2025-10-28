@@ -33,7 +33,7 @@ for tv in TVS:
 # -------- Fonctions --------
 def check_tv_status(tv):
     try:
-        r = requests.get(f"http://{tv['ip']}:{tv['port']}/status", timeout=2)
+        r = requests.get(f"http://{tv['ip']}:{tv['port']}/status", timeout=TIMEOUT)
         data = r.json()
         tv["status"] = data.get("status", "Erreur")
         tv["last_url"] = data.get("last_url", "")
@@ -79,7 +79,7 @@ def send_url(index):
     tv["url"] = url
     try:
         requests.post(f"http://{tv['ip']}:{tv['port']}/set-url",
-                      data={"url": url, "password": PASSWORD}, timeout=3)
+                      data={"url": url, "password": PASSWORD}, timeout=TIMEOUT)
     except Exception as e:
         tv["status"] = f"Erreur : {e}"
     return redirect(url_for("home"))
@@ -91,7 +91,7 @@ def send_all():
         tv["url"] = url
         try:
             requests.post(f"http://{tv['ip']}:{tv['port']}/set-url",
-                          data={"url": url, "password": PASSWORD}, timeout=3)
+                          data={"url": url, "password": PASSWORD}, timeout=TIMEOUT)
         except Exception as e:
             tv["status"] = f"Erreur : {e}"
     return redirect(url_for("home"))
@@ -106,7 +106,7 @@ def send_display_to_tv(display_index, tv_index):
     tv["url"] = disp["url"]
     try:
         requests.post(f"http://{tv['ip']}:{tv['port']}/set-url",
-                      data={"url": disp["url"], "password": PASSWORD}, timeout=3)
+                      data={"url": disp["url"], "password": PASSWORD}, timeout=TIMEOUT)
     except Exception as e:
         tv["status"] = f"Erreur : {e}"
     return redirect(url_for("home"))
@@ -121,7 +121,7 @@ def send_display_to_all(display_index):
         tv["url"] = disp["url"]
         try:
             requests.post(f"http://{tv['ip']}:{tv['port']}/set-url",
-                          data={"url": disp["url"], "password": PASSWORD}, timeout=3)
+                          data={"url": disp["url"], "password": PASSWORD}, timeout=TIMEOUT)
         except Exception as e:
             tv["status"] = f"Erreur : {e}"
     return redirect(url_for("home"))
